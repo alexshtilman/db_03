@@ -1,0 +1,134 @@
+//Display count of students having marks in the [70-80]
+use('java36');
+db.students.aggregate([
+    { $match: { "marks.mark": { $gt: 70, $lt: 80 } } },
+    { $count: 'name' }
+]
+).toArray()[0].name;
+/*
+ Display two student names that are worst in Front-End 
+ (Assumed that Front-End is any subject that is not related to Java).
+ Estimation should be done according to the sum of all relevant marks
+ */
+
+db.students.aggregate([
+    { $unwind: "$marks" },
+    {
+        $project: {
+            name: 1,
+            marks: 1,
+            frontEnd: {
+                $regexMatch: {
+                    input: "$marks.subject",
+                    regex: /\bJava\b/,
+                    options: "i"
+                }
+            }
+        }
+    },
+    { $match: { "frontEnd": false } },
+    {
+        $group: {
+            _id: "$name",
+            sum: { $sum: "$marks.mark" }
+        }
+    },
+    { $sort: { sum: 1, _id: 1 } },
+    {
+        $project: {
+            _id: 1
+        }
+    },
+    {
+        $replaceRoot: {
+            "newRoot": {
+                $arrayToObject: {
+                    $concatArrays: [
+                        [{ "k": "name", "v": "$_id" }]
+                    ]
+                }
+            }
+        }
+    },
+    { $limit: 2 }
+]);
+
+
+/*
+Display two student names that are best in Back-End 
+(Assumed that Back-End is any subject containing Java). 
+Estimation should be done according to the sum of all relevant marks
+*/
+
+db.students.aggregate([
+    { $unwind: "$marks" },
+    {
+        $project: {
+            name: 1,
+            marks: 1,
+            backEnd: {
+                $regexMatch: {
+                    input: "$marks.subject",
+                    regex: /\bJava\b/,
+                    options: "i"
+                }
+            }
+        }
+    },
+    { $match: { "backEnd": true } },
+    {
+        $group: {
+            _id: "$name",
+            sum: { $sum: "$marks.mark" }
+        }
+    },
+    { $sort: { sum: -1, _id: 1 } },
+    {
+        $project: {
+            _id: 1
+        }
+    },
+    {
+        $replaceRoot: {
+            "newRoot": {
+                $arrayToObject: {
+                    $concatArrays: [
+                        [{ "k": "name", "v": "$_id" }]
+                    ]
+                }
+            }
+        }
+    },
+    { $limit: 2 }
+]);
+/*
+Display list of all the marks with counts of their occurrences.
+List should be sorted in the descending order of the occurrences.*/
+
+db.students.aggregate([
+    { $unwind: "$marks" },
+    {
+        $group:
+        {
+            _id: "$marks.subject",
+            count: { $sum: 1 },
+        }
+    },
+    {
+        $sort: {
+            count: -1,
+            _id: 1,
+        }
+    },
+    {
+        $replaceRoot: {
+            "newRoot": {
+                $arrayToObject: {
+                    $concatArrays: [
+                        [{ "k": "$_id", "v": "$count" }]
+                    ]
+                }
+            }
+        }
+    }
+]);
