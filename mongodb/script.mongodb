@@ -126,5 +126,12 @@ db.students.aggregate([
             count: -1,
             _id: 1,
         }
-    }
+    },
+    {
+        $project: {
+            _id: 0,
+            mark: "$_id",
+            count: 1
+        }
+    },
 ]);
