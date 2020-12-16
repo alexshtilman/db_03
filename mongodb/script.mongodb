@@ -5,6 +5,43 @@ db.students.aggregate([
     { $count: 'name' }
 ]
 ).toArray()[0].name;
+
+/*
+Display two student names having most even marks
+*/
+db.students.aggregate([
+    { $unwind: "$marks" },
+    {
+        $project:
+        {
+            name: 1,
+            markMod:
+            {
+                $mod: [
+                    "$marks.mark", 2
+                ]
+            }
+        }
+    },
+    {
+        $match: { markMod: 0 }
+    },
+    {
+        $group: {
+            _id: "$name",
+            count: { $sum: 1 }
+        }
+    },
+    { $sort: { count: -1 } },
+    { $limit: 2 },
+    {
+        $project: {
+            _id: 0,
+            name: "$_id"
+        }
+    },
+]
+);
 /*
  Display two student names that are worst in Front-End 
  (Assumed that Front-End is any subject that is not related to Java).
@@ -30,18 +67,8 @@ db.students.aggregate([
     { $sort: { sum: 1, _id: 1 } },
     {
         $project: {
-            _id: 1
-        }
-    },
-    {
-        $replaceRoot: {
-            "newRoot": {
-                $arrayToObject: {
-                    $concatArrays: [
-                        [{ "k": "name", "v": "$_id" }]
-                    ]
-                }
-            }
+            _id: 0,
+            name: "$_id"
         }
     },
     { $limit: 2 }
@@ -75,18 +102,8 @@ db.students.aggregate([
     { $sort: { sum: -1, _id: 1 } },
     {
         $project: {
-            _id: 1
-        }
-    },
-    {
-        $replaceRoot: {
-            "newRoot": {
-                $arrayToObject: {
-                    $concatArrays: [
-                        [{ "k": "name", "v": "$_id" }]
-                    ]
-                }
-            }
+            _id: 0,
+            name: "$_id"
         }
     },
     { $limit: 2 }
