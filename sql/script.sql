@@ -19,7 +19,7 @@ SELECT st.name
     JOIN subjects su on m.suid = su.suid
     JOIN students st on m.stid = st.stid
 WHERE su.subject NOT LIKE '%Java%'
-GROUP by st.name
+GROUP by st.stid, st.name
 ORDER BY SUM(m.mark) ASC
 LIMIT 2;
 /*
@@ -38,8 +38,8 @@ LIMIT 2;
 /*
  Display list of all the marks with counts of their occurrences.
  List should be sorted in the descending order of the occurrences.*/
-SELECT subject,
-    COUNT(suid)
-FROM students_marks_subjects
-GROUP BY subject
-ORDER BY 2 DESC, 1 DESC;
+SELECT mark,
+    COUNT(mark)
+FROM marks
+GROUP BY mark
+ORDER BY 2 DESC;
